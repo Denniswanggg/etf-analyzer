@@ -1,0 +1,33 @@
+name: 每日 ETF 分析
+
+on:
+  schedule:
+    - cron: '30 0 * * 1-5'   # UTC 00:30 = 台灣時間 08:30，週一到週五
+  workflow_dispatch:           # 允許手動觸發（測試用）
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 取出程式碼
+        uses: actions/checkout@v4
+
+      - name: 安裝 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安裝套件
+        run: pip install -r requirements.txt
+
+      - name: 執行 ETF 分析
+        run: python etf_analyzer.py
+
+      - name: 將報告 commit 回 repository
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/ data/
+          git diff --staged --quiet || git commit -m "📊 ETF分析報告 $(date +'%Y-%m-%d')"
+          git push
